@@ -1,9 +1,11 @@
-from utils.print_fn import log
-
 import os
 import urllib
+
 import torch
 from torch.utils import model_zoo
+
+from utils.print_fn import log
+
 
 # torch.autograd.set_detect_anomaly(True)
 
@@ -57,12 +59,12 @@ class CheckpointIO(object):
             return self.load_file(filename)
 
     def load_file(
-        self,
-        filepath,
-        no_reload=False,
-        ignore_keys=[],
-        only_use_keys=None,
-        map_location="cuda",
+            self,
+            filepath,
+            no_reload=False,
+            ignore_keys=[],
+            only_use_keys=None,
+            map_location="cuda",
     ):
         """Loads a module dictionary from file.
 
@@ -71,7 +73,7 @@ class CheckpointIO(object):
         """
 
         assert not (
-            (len(ignore_keys) > 0) and only_use_keys is not None
+                (len(ignore_keys) > 0) and only_use_keys is not None
         ), "please specify at most one in [ckpt_ignore_keys, ckpt_only_use_keys]"
 
         if filepath is not None and filepath != "None":

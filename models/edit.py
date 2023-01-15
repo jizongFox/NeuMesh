@@ -1,8 +1,9 @@
-from models.frameworks.neumesh import MeshSampler
 import numpy as np
+import open3d as o3d
 import torch
 import torch.nn as nn
-import open3d as o3d
+
+from models.frameworks.neumesh import MeshSampler
 
 
 def get_bbox_on_uv(maskmesh_uv):
@@ -20,13 +21,13 @@ def get_bbox_on_uv(maskmesh_uv):
 
 class EditablePrimitive:
     def __init__(
-        self,
-        model,
-        masks,
-        maskmeshs_uv,
-        maskmeshs_uv2vertices,
-        geo_feature=None,
-        color_feature=None,
+            self,
+            model,
+            masks,
+            maskmeshs_uv,
+            maskmeshs_uv2vertices,
+            geo_feature=None,
+            color_feature=None,
     ):
         self.model = model
         self.masks = masks
@@ -111,13 +112,13 @@ class EditablePrimitive:
             self.mask_to_tensor(i)
 
         if (
-            self.edit_geo_features is not None
-            and torch.is_tensor(self.edit_geo_features) == False
+                self.edit_geo_features is not None
+                and torch.is_tensor(self.edit_geo_features) == False
         ):
             self.edit_geo_features = torch.from_numpy(self.edit_geo_features)
         if (
-            self.edit_color_features is not None
-            and torch.is_tensor(self.edit_color_features) == False
+                self.edit_color_features is not None
+                and torch.is_tensor(self.edit_color_features) == False
         ):
             self.edit_color_features = torch.from_numpy(self.edit_color_features)
 
@@ -167,10 +168,10 @@ class EditablePrimitive:
     def crop_uv(self, i, domain_min, domain_max):
         maskmesh_uv = self.maskmeshs_uv[i]
         is_inside = (
-            (maskmesh_uv[..., 0] > domain_min[0])
-            & (maskmesh_uv[..., 0] < domain_max[0])
-            & (maskmesh_uv[..., 1] > domain_min[1])
-            & (maskmesh_uv[..., 1] < domain_max[1])
+                (maskmesh_uv[..., 0] > domain_min[0])
+                & (maskmesh_uv[..., 0] < domain_max[0])
+                & (maskmesh_uv[..., 1] > domain_min[1])
+                & (maskmesh_uv[..., 1] < domain_max[1])
         )
         self.maskmeshs_uv[i] = maskmesh_uv[is_inside]
         self.maskmeshs_uv2vertices[i] = self.maskmeshs_uv2vertices[i][is_inside]
@@ -179,7 +180,7 @@ class EditablePrimitive:
 
     def get_uvcolor(self, i, bgr=False):
         rgb_colors = (
-            np.array(self.get_mesh().vertex_colors)[self.maskmeshs_uv2vertices[i]] * 255
+                np.array(self.get_mesh().vertex_colors)[self.maskmeshs_uv2vertices[i]] * 255
         )
         if bgr == True:
             rgb_colors[..., [0, 2]] = rgb_colors[..., [2, 0]]
@@ -201,13 +202,13 @@ def transform_direction(rot_s_m, dirs):
 
 class TextureEditableNeuMesh(nn.Module):
     def __init__(
-        self,
-        main_primitive,
-        slave_primitives,
-        T_s_m_list=None,
-        method="code",
-        blend_black=False,
-        blur_edge=False,
+            self,
+            main_primitive,
+            slave_primitives,
+            T_s_m_list=None,
+            method="code",
+            blend_black=False,
+            blur_edge=False,
     ):
         super(TextureEditableNeuMesh, self).__init__()
         self.main_primitive = main_primitive
@@ -237,13 +238,13 @@ class TextureEditableNeuMesh(nn.Module):
         return self.main_primitive.model.forward_density_only(xyz, view_dirs)
 
     def compute_bounded_near_far(
-        self,
-        rays_o,
-        rays_d,
-        near,
-        far,
-        sample_grid: int = 256,
-        distance_thresh: float = 0.1,
+            self,
+            rays_o,
+            rays_d,
+            near,
+            far,
+            sample_grid: int = 256,
+            distance_thresh: float = 0.1,
     ):
         return self.main_primitive.model.compute_bounded_near_far(
             rays_o, rays_d, near, far, sample_grid, distance_thresh
@@ -259,12 +260,12 @@ class TextureEditableNeuMesh(nn.Module):
         )
 
     def forward(
-        self,
-        xyz: torch.Tensor,
-        view_dirs: torch.Tensor,
-        density_only=False,
-        need_nablas=True,
-        nablas_only=False,
+            self,
+            xyz: torch.Tensor,
+            view_dirs: torch.Tensor,
+            density_only=False,
+            need_nablas=True,
+            nablas_only=False,
     ):
         """
         xyz: (...,3)
@@ -342,8 +343,8 @@ class TextureEditableNeuMesh(nn.Module):
                 if self.blend_black == False:
                     if self.blur_edge == True:
                         blend_color[paint_region] = blend_color[
-                            paint_region
-                        ] * unpaint_weight.unsqueeze(
+                                                        paint_region
+                                                    ] * unpaint_weight.unsqueeze(
                             -1
                         ) + slave_color * paint_weight.unsqueeze(
                             -1

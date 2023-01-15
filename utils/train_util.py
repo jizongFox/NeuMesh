@@ -1,6 +1,7 @@
-import torch
-import numpy as np
 from typing import Iterable
+
+import numpy as np
+import torch
 
 
 def calc_grad_norm(norm_type=2.0, **named_models):
@@ -31,11 +32,11 @@ def batchify_query(query_fn, *args: Iterable[torch.Tensor], chunk, dim_batchify)
     raw_ret = []
     for i in range(0, _N, chunk):
         if dim_batchify == 0:
-            args_i = [arg[i : i + chunk] for arg in args]
+            args_i = [arg[i: i + chunk] for arg in args]
         elif dim_batchify == 1:
-            args_i = [arg[:, i : i + chunk] for arg in args]
+            args_i = [arg[:, i: i + chunk] for arg in args]
         elif dim_batchify == 2:
-            args_i = [arg[:, :, i : i + chunk] for arg in args]
+            args_i = [arg[:, :, i: i + chunk] for arg in args]
         else:
             raise NotImplementedError
         raw_ret_i = query_fn(*args_i)
@@ -62,7 +63,7 @@ def batchify_query(query_fn, *args: Iterable[torch.Tensor], chunk, dim_batchify)
                         *v.shape[:dim_batchify],
                         _N_rays,
                         _N_pts,
-                        *v.shape[dim_batchify + 1 :],
+                        *v.shape[dim_batchify + 1:],
                     ]
                 )
             entry = tmp_dict
@@ -72,7 +73,7 @@ def batchify_query(query_fn, *args: Iterable[torch.Tensor], chunk, dim_batchify)
             # NOTE: compatible with torch 1.6
             v = torch.cat(entry, dim=dim_batchify)
             entry = v.reshape(
-                [*v.shape[:dim_batchify], _N_rays, _N_pts, *v.shape[dim_batchify + 1 :]]
+                [*v.shape[:dim_batchify], _N_rays, _N_pts, *v.shape[dim_batchify + 1:]]
             )
         collate_raw_ret.append(entry)
         num_entry += 1

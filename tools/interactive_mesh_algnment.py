@@ -1,8 +1,8 @@
 # examples/python/visualization/interactive_visualization.py
 
-from types import coroutine
-import numpy as np
 import copy
+
+import numpy as np
 import open3d as o3d
 
 

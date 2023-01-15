@@ -1,23 +1,21 @@
 import os
 
+import cv2
+import imageio
+import numpy as np
+import torch
+from tqdm import tqdm
+
+from dataio import get_data
+from models.frameworks.neumesh import get_neumesh_model
 from utils import io_util, rend_util
 from utils.checkpoints import sorted_ckpts
 from utils.print_fn import log
 
-from dataio import get_data
-
-from models.frameworks.neumesh import get_neumesh_model
-
-import os
-import imageio
-import numpy as np
-from tqdm import tqdm
-import open3d as o3d
-import cv2
-import torch
 
 def normalize(vec, axis=-1):
     return vec / (np.linalg.norm(vec, axis=axis, keepdims=True) + 1e-9)
+
 
 def view_matrix(forward: np.ndarray, up: np.ndarray, cam_location: np.ndarray):
     rot_z = normalize(forward)
@@ -40,10 +38,10 @@ def poses_avg(poses):
 
 
 def look_at(
-    cam_location: np.ndarray,
-    point: np.ndarray,
-    up=np.array([0.0, -1.0, 0.0])  # openCV convention
-    # up=np.array([0., 1., 0.])         # openGL convention
+        cam_location: np.ndarray,
+        point: np.ndarray,
+        up=np.array([0.0, -1.0, 0.0])  # openCV convention
+        # up=np.array([0., 1., 0.])         # openGL convention
 ):
     # Cam points in positive z direction
     forward = normalize(point - cam_location)  # openCV convention
@@ -52,14 +50,14 @@ def look_at(
 
 
 def c2w_track_spiral(
-    c2w,
-    up_vec,
-    rads,
-    focus: float,
-    zrate: float,
-    rots: int,
-    N: int,
-    zdelta: float = 0.0,
+        c2w,
+        up_vec,
+        rads,
+        focus: float,
+        zrate: float,
+        rots: int,
+        N: int,
+        zdelta: float = 0.0,
 ):
     # TODO: support zdelta
     """generate camera to world matrices of spiral track, looking at the same point [0,0,focus]
@@ -93,8 +91,8 @@ def c2w_track_spiral(
         c2w_tracks.append(c2w_i)
     return c2w_tracks
 
-def render_function(args, model, render_kwargs_test, render_fn, ckpt_file=""):
 
+def render_function(args, model, render_kwargs_test, render_fn, ckpt_file=""):
     io_util.cond_mkdir("./out")
 
     if args.dataset_split is not None:
@@ -138,7 +136,7 @@ def render_function(args, model, render_kwargs_test, render_fn, ckpt_file=""):
             test_pose = poses_avg(c2ws)
             focus_distance = np.mean(np.linalg.norm(c2ws[:, :3, 3], axis=-1))
             up = c2ws[:, :3, 1].sum(0)
-        
+
         rads = np.array(
             [
                 np.percentile(np.abs(c2ws[:, 0, 3]), 10, 0),
@@ -146,7 +144,7 @@ def render_function(args, model, render_kwargs_test, render_fn, ckpt_file=""):
                 np.percentile(np.abs(c2ws[:, 2, 3]), 30, 0),
             ]
         ).reshape(-1)
-    
+
         if len(args.spiral_rad) >= 1 and args.spiral_rad[0] >= 0:
             rads[0] = args.spiral_rad[0]
         if len(args.spiral_rad) >= 2 and args.spiral_rad[1] >= 0:
@@ -197,7 +195,7 @@ def render_function(args, model, render_kwargs_test, render_fn, ckpt_file=""):
 
     assert len(render_c2ws) == len(view_list)
     for idx, c2w in enumerate(tqdm(render_c2ws, desc="rendering...")):
-        if  not args.disable_rgb:
+        if not args.disable_rgb:
             rays_o, rays_d, select_inds = rend_util.get_rays(
                 torch.from_numpy(c2w).float().cuda()[None, ...],
                 intrinsics[None, ...],
@@ -265,6 +263,7 @@ def render_function(args, model, render_kwargs_test, render_fn, ckpt_file=""):
             fps=args.fps,
             quality=10,
         )
+
 
 def main_function(args):
     # get student model

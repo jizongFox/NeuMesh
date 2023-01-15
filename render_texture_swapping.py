@@ -1,33 +1,34 @@
 import argparse
-import open3d as o3d
-import numpy as np
 import json
+
+import numpy as np
+import open3d as o3d
+import torch
+
+from models.edit import *
+from models.frameworks.neumesh import SingleRenderer
+from models.frameworks.neumesh import get_neumesh_model as get_model
+from render import render_function, create_render_args
+from tools import interactive_mesh_algnment
 from utils import io_util
 from utils.dist_util import (
     get_local_rank,
 )
 
-from models.frameworks.neumesh import MeshSampler, get_neumesh_model as get_model
-from models.frameworks.neumesh import SingleRenderer
-from render import render_function, create_render_args
-from tools import interactive_mesh_algnment
-from models.edit import *
-import torch
-
 
 def normal_distribution(x, mu=0, sigma=1):
     return torch.exp(-0.5 * ((x - mu) ** 2) / (sigma ** 2)) / (
-        sigma * np.sqrt(2 * np.pi)
+            sigma * np.sqrt(2 * np.pi)
     )  # normal distribution
 
 
 def transfer_code_on_xyz(
-    main_primitive,
-    main_mask,
-    slave_primitive,
-    T_s_m,
-    avg_method="inv_dis",
-    debug_draw=False,
+        main_primitive,
+        main_mask,
+        slave_primitive,
+        T_s_m,
+        avg_method="inv_dis",
+        debug_draw=False,
 ):
     # a. transform main vertices to slave space
     main_vertices = torch.FloatTensor(main_primitive.get_mesh_vertices(b_torch=False))
@@ -64,16 +65,16 @@ def transfer_code_on_xyz(
     weights_t = weights_t.detach().cpu()
 
     feat_slave = slave_primitive.model.color_features[
-        close_indices, :
-    ]  # (Nm,Kc,fg_dim)
+                 close_indices, :
+                 ]  # (Nm,Kc,fg_dim)
     feat_main_trans = torch.sum(
         weights_t.unsqueeze(-1) * feat_slave, dim=-2
     )  # (Nm, fg_dim)
     main_primitive.edit_color_features[main_mask] = feat_main_trans
 
     geo_feat_slave = slave_primitive.model.geometry_features[
-        close_indices, :
-    ]  # (Nm,Kc,fg_dim)
+                     close_indices, :
+                     ]  # (Nm,Kc,fg_dim)
     geo_feat_main_trans = torch.sum(
         weights_t.unsqueeze(-1) * geo_feat_slave, dim=-2
     )  # (Nm, fg_dim)
@@ -183,9 +184,9 @@ def check_degenerate_triangles(mesh):
             v2 = vertices[i2]
             dis = np.linalg.norm(v1 - v2)
             if dis < 1e-5:
-                print(vertices[i1 : i2 + 1])
+                print(vertices[i1: i2 + 1])
             assert (
-                dis > 1e-5
+                    dis > 1e-5
             ), f"vertex {triangle[j]} and {triangle[(j + 1) % 3]} is too close: {dis}, v1: {v1}, v2:{v2}"
 
 
@@ -226,7 +227,7 @@ def deform_mesh_func(pt1_trans, corr, slave_mesh, slave_mask, use_as_rigid_as_po
                 np.concatenate([static_pos, handle_pos], axis=0)
             )
         with o3d.utility.VerbosityContextManager(
-            o3d.utility.VerbosityLevel.Debug
+                o3d.utility.VerbosityLevel.Debug
         ) as cm:
             mesh_prime = slave_mesh.deform_as_rigid_as_possible(
                 constraint_ids, constraint_pos, max_iter=20
@@ -301,7 +302,6 @@ def save_rigid_transform(args, T_s_m_list, corr_list):
 
 
 def main_function(args):
-
     # init_env(args)
 
     # # ----------------------------
@@ -424,7 +424,6 @@ def main_function(args):
 
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=str, required=True)
     create_render_args(parser)

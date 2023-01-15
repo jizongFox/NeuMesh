@@ -1,26 +1,26 @@
-from utils.print_fn import log
-from utils.logger import Logger
-
 import math
 import numbers
-import numpy as np
 
+import numpy as np
 import torch
 import torch.nn as nn
-from torch import optim
-from torch import autograd
 import torch.nn.functional as F
+from torch import autograd
+from torch import optim
+
+from utils.logger import Logger
+from utils.print_fn import log
 
 
 class Embedder(nn.Module):
     def __init__(
-        self,
-        input_dim,
-        max_freq_log2,
-        N_freqs,
-        log_sampling=True,
-        include_input=True,
-        periodic_fns=(torch.sin, torch.cos),
+            self,
+            input_dim,
+            max_freq_log2,
+            N_freqs,
+            log_sampling=True,
+            include_input=True,
+            periodic_fns=(torch.sin, torch.cos),
     ):
         """
         :param input_dim: dimension of input to be embedded
@@ -137,18 +137,18 @@ class DenseLayer(nn.Linear):
 
 class ImplicitSurface(nn.Module):
     def __init__(
-        self,
-        W=256,
-        D=8,
-        skips=[4],
-        W_geo_feat=256,
-        input_ch=3,
-        radius_init=1.0,
-        obj_bounding_size=2.0,
-        geometric_init=True,
-        embed_multires=6,
-        weight_norm=True,
-        use_siren=False,
+            self,
+            W=256,
+            D=8,
+            skips=[4],
+            W_geo_feat=256,
+            input_ch=3,
+            radius_init=1.0,
+            obj_bounding_size=2.0,
+            geometric_init=True,
+            embed_multires=6,
+            weight_norm=True,
+            use_siren=False,
     ):
         """
         W_geo_feat: to set whether to use nerf-like geometry feature or IDR-like geometry feature.
@@ -197,7 +197,7 @@ class ImplicitSurface(nn.Module):
                     out_dim = 1
             elif (l + 1) in self.skips:
                 out_dim = (
-                    W - input_ch
+                        W - input_ch
                 )  # recude output dim before the skips layers, as in IDR / NeuS
             else:
                 out_dim = W
@@ -243,7 +243,7 @@ class ImplicitSurface(nn.Module):
                         layer.weight, 0.0, np.sqrt(2) / np.sqrt(out_dim)
                     )
                     torch.nn.init.constant_(
-                        layer.weight[:, -(input_ch - 3) :], 0.0
+                        layer.weight[:, -(input_ch - 3):], 0.0
                     )  # NOTE: this contrains the concat order to be  [h, x_embed]
                 else:
                     nn.init.constant_(layer.bias, 0.0)
@@ -312,13 +312,13 @@ class ImplicitSurface(nn.Module):
 
 
 def pretrain_siren_sdf(
-    implicit_surface: ImplicitSurface,
-    num_iters=5000,
-    lr=1.0e-4,
-    batch_points=5000,
-    target_radius=0.5,
-    obj_bounding_size=3.0,
-    logger=None,
+        implicit_surface: ImplicitSurface,
+        num_iters=5000,
+        lr=1.0e-4,
+        batch_points=5000,
+        target_radius=0.5,
+        obj_bounding_size=3.0,
+        logger=None,
 ):
     # --------------
     # pretrain SIREN-sdf to be a sphere, as in SIREN and Neural Lumigraph Rendering
@@ -352,16 +352,16 @@ def pretrain_siren_sdf(
 
 class RadianceNet(nn.Module):
     def __init__(
-        self,
-        D=4,
-        W=256,
-        skips=[],
-        W_geo_feat=256,
-        embed_multires=6,
-        embed_multires_view=4,
-        use_view_dirs=True,
-        weight_norm=True,
-        use_siren=False,
+            self,
+            D=4,
+            W=256,
+            skips=[],
+            W_geo_feat=256,
+            embed_multires=6,
+            embed_multires_view=4,
+            use_view_dirs=True,
+            weight_norm=True,
+            use_siren=False,
     ):
         super().__init__()
 
@@ -415,11 +415,11 @@ class RadianceNet(nn.Module):
         self.layers = nn.ModuleList(fc_layers)
 
     def forward(
-        self,
-        x: torch.Tensor,
-        view_dirs: torch.Tensor,
-        normals: torch.Tensor,
-        geometry_feature: torch.Tensor,
+            self,
+            x: torch.Tensor,
+            view_dirs: torch.Tensor,
+            normals: torch.Tensor,
+            geometry_feature: torch.Tensor,
     ):
         # calculate radiance field
         x = self.embed_fn(x)
@@ -439,11 +439,11 @@ class RadianceNet(nn.Module):
         return h
 
     def forward_with_feature(
-        self,
-        x: torch.Tensor,
-        view_dirs: torch.Tensor,
-        normals: torch.Tensor,
-        geometry_feature: torch.Tensor,
+            self,
+            x: torch.Tensor,
+            view_dirs: torch.Tensor,
+            normals: torch.Tensor,
+            geometry_feature: torch.Tensor,
     ):
         # calculate radiance field
         x = self.embed_fn(x)
@@ -468,16 +468,16 @@ class RadianceNet(nn.Module):
 # modified from https://github.com/yenchenlin/nerf-pytorch
 class NeRF(nn.Module):
     def __init__(
-        self,
-        D=8,
-        W=256,
-        input_ch=3,
-        input_ch_view=3,
-        multires=-1,
-        multires_view=-1,
-        output_ch=4,
-        skips=[4],
-        use_view_dirs=False,
+            self,
+            D=8,
+            W=256,
+            input_ch=3,
+            input_ch_view=3,
+            multires=-1,
+            multires_view=-1,
+            output_ch=4,
+            skips=[4],
+            use_view_dirs=False,
     ):
         """ """
         super(NeRF, self).__init__()
@@ -626,9 +626,9 @@ def CosineAnnealWarmUpSchedulerLambda(total_steps, warmup_steps, min_factor=0.1)
             learning_factor = epoch / warmup_steps
         else:
             learning_factor = (
-                np.cos(np.pi * ((epoch - warmup_steps) / (total_steps - warmup_steps)))
-                + 1.0
-            ) * 0.5 * (1 - min_factor) + min_factor
+                                      np.cos(np.pi * ((epoch - warmup_steps) / (total_steps - warmup_steps)))
+                                      + 1.0
+                              ) * 0.5 * (1 - min_factor) + min_factor
         return learning_factor
 
     return lambda_fn
@@ -693,7 +693,6 @@ if __name__ == "__main__":
         """
         test siren-sdf pretrain
         """
-        from utils.print_fn import logger
         from utils.mesh_util import extract_mesh
         from utils.io_util import cond_mkdir
 
@@ -736,5 +735,6 @@ if __name__ == "__main__":
         torch.save(
             siren_sdf.state_dict(), "./dev_test/pretrain_siren/{}.pt".format(namebase)
         )
+
 
     test()

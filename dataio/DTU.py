@@ -1,8 +1,9 @@
 import os
-import torch
-import numpy as np
-from tqdm import tqdm
+
 import cv2
+import numpy as np
+import torch
+from tqdm import tqdm
 
 from utils.io_util import load_mask, load_rgb, glob_imgs
 from utils.rend_util import rot_to_quat, load_K_Rt_from_P
@@ -13,14 +14,14 @@ class SceneDataset(torch.utils.data.Dataset):
     """Dataset for a class of objects, where each datapoint is a SceneInstanceDataset."""
 
     def __init__(
-        self,
-        train_cameras,
-        data_dir,
-        downscale=1.0,  # [H, W]
-        cam_file=None,
-        scale_radius=-1,
-        split="entire",
-        verbose=False,
+            self,
+            train_cameras,
+            data_dir,
+            downscale=1.0,  # [H, W]
+            cam_file=None,
+            scale_radius=-1,
+            split="entire",
+            verbose=False,
     ):
 
         assert os.path.exists(data_dir), "Data directory is empty"
@@ -50,7 +51,7 @@ class SceneDataset(torch.utils.data.Dataset):
                 self.mask[val_numbers] = True
 
             if verbose == True and os.path.exists(
-                os.path.join(self.instance_dir, "val_imgs.txt")
+                    os.path.join(self.instance_dir, "val_imgs.txt")
             ):
                 with open(os.path.join(self.instance_dir, "val_imgs.txt"), "r") as f:
                     ss = f.read().rstrip()

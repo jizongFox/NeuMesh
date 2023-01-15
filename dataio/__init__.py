@@ -1,6 +1,3 @@
-import numpy as np
-
-
 def get_data(args, return_val=False, val_downscale=4.0, **overwrite_cfgs):
     dataset_type = args.data.get("type", "DTU")
     cfgs = {

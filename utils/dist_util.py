@@ -1,9 +1,9 @@
 import os
-import torch
 import random
-import numpy as np
 from typing import Optional
 
+import numpy as np
+import torch
 import torch.distributed as dist
 
 rank = 0  # process id, for IPC

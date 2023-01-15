@@ -35,7 +35,7 @@ class ColoredFormatter(logging.Formatter):
                 msg_color = COLOR_SEQ % (30 + COLORS[levelname]) + msg + RESET_SEQ
                 record.msg = msg_color
             levelname_color = (
-                COLOR_SEQ % (30 + COLORS[levelname]) + levelname + RESET_SEQ
+                    COLOR_SEQ % (30 + COLORS[levelname]) + levelname + RESET_SEQ
             )
             record.levelname = levelname_color
         return logging.Formatter.format(self, record)

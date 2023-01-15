@@ -1,21 +1,20 @@
-from utils.print_fn import log
-
-import os
-import copy
-import yaml
-import glob
-import addict
-import shutil
-import imageio
 import argparse
+import copy
 import functools
-import numpy as np
+import glob
 import json
+import os
+import shutil
 
-
-import torch
+import addict
+import imageio
+import numpy as np
 import skimage
+import torch
+import yaml
 from skimage.transform import rescale
+
+from utils.print_fn import log
 
 
 def glob_imgs(path):
@@ -110,7 +109,7 @@ def backup(backup_dir):
             file
             for file in files
             if os.path.isfile(os.path.join(this_dir, subdir, file))
-            and file[file.rfind(".") :] in filetypes_to_copy
+               and file[file.rfind("."):] in filetypes_to_copy
         ]
         [
             shutil.copyfile(
@@ -123,7 +122,7 @@ def backup(backup_dir):
 
 
 def save_video(
-    imgs, fname, as_gif=False, fps=24, quality=8, already_np=False, gif_scale: int = 512
+        imgs, fname, as_gif=False, fps=24, quality=8, already_np=False, gif_scale: int = 512
 ):
     """[summary]
 
@@ -138,7 +137,7 @@ def save_video(
     # convert to np.uint8
     if not already_np:
         imgs = (
-            255 * np.clip(imgs.permute(0, 2, 3, 1).detach().cpu().numpy(), 0, 1)
+                255 * np.clip(imgs.permute(0, 2, 3, 1).detach().cpu().numpy(), 0, 1)
         ).astype(np.uint8)
     imageio.mimwrite(fname, imgs, fps=fps, quality=quality)
 
@@ -231,7 +230,6 @@ def read_json(path):
 
 
 def load_yaml(path, default_path=None):
-
     with open(path, encoding="utf8") as yaml_file:
         config_dict = yaml.load(yaml_file, Loader=yaml.FullLoader)
         config = ForceKeyErrorDict(**config_dict)
@@ -305,7 +303,7 @@ def load_config(args, unknown, base_config_path=None):
     command line param --over--> args.config --over--> default config yaml
     """
     assert (args.config is not None) != (
-        args.resume_dir is not None
+            args.resume_dir is not None
     ), "you must specify ONLY one in 'config' or 'resume_dir' "
 
     # NOTE: '--local_rank=xx' is automatically given by torch.distributed.launch (if used)
@@ -322,10 +320,10 @@ def load_config(args, unknown, base_config_path=None):
     print("=> Parse extra configs: ", unknown)
     if args.resume_dir is not None:
         assert (
-            args.config is None
+                args.config is None
         ), "given --config will not be used when given --resume_dir"
         assert (
-            "--expname" not in unknown
+                "--expname" not in unknown
         ), "given --expname with --resume_dir will lead to unexpected behavior."
         # ---------------
         # if loading from a dir, do not use base.yaml as the default;
@@ -370,7 +368,7 @@ def load_config(args, unknown, base_config_path=None):
         # # device_ids: -1 will be parsed as using all available cuda device
         # # device_ids: [] will be parsed as using all available cuda device
         if (type(config.device_ids) == int and config.device_ids == -1) or (
-            type(config.device_ids) == list and len(config.device_ids) == 0
+                type(config.device_ids) == list and len(config.device_ids) == 0
         ):
             config.device_ids = list(range(torch.cuda.device_count()))
         # # e.g. device_ids: 0 will be parsed as device_ids [0]

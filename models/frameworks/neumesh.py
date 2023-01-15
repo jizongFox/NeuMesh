@@ -1,22 +1,20 @@
+import contextlib
+import functools
+from collections import OrderedDict
+from typing import Optional
+
+import frnn
+import numpy as np
+import open3d as o3d
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.utils.weight_norm as weight_norm
 from torch import autograd
-
-from utils import rend_util, train_util
-from utils.metric_util import *
-
-import functools
-import contextlib
-import numpy as np
 from tqdm import tqdm
-from typing import Optional
-from collections import OrderedDict
-import open3d as o3d
 
 from models.base import get_embedder
-import frnn
+from utils import rend_util, train_util
 from utils.checkpoints import CheckpointIO
 
 
@@ -24,6 +22,7 @@ def load_ckpt(ckpt_path, model):
     checkpoint_io = CheckpointIO(allow_mkdir=False)
     checkpoint_io.register_modules(model=model)
     checkpoint_io.load_file(ckpt_path)
+
 
 def cdf_Phi_s(x, s):  # \VarPhi_s(t)
     # den = 1 + torch.exp(-s*x)
@@ -58,7 +57,7 @@ def sdf_to_w(sdf: torch.Tensor, s):
 
     # [(B), N_rays, N_pts-1]
     visibility_weights = (
-        opacity_alpha * torch.cumprod(shifted_transparency, dim=-1)[..., :-1]
+            opacity_alpha * torch.cumprod(shifted_transparency, dim=-1)[..., :-1]
     )
 
     return cdf, opacity_alpha, visibility_weights
@@ -83,28 +82,28 @@ def alpha_to_w(alpha: torch.Tensor):
 
 class NeuMesh(nn.Module):
     def __init__(
-        self,
-        mesh_sampler,
-        b_xyz_input,
-        D_density: int,
-        D_color: int,
-        W: int,
-        geometry_dim: int,
-        color_dim: int,
-        multires_view: int,
-        multires_d: int,
-        multires_fg: int,
-        multires_ft: int,
-        enable_nablas_input: bool,
-        input_view_dim=3,
-        input_d_dim=1,
-        ln_s=0.2996,
-        speed_factor=1.0,
-        learn_indicator_vector=False,
-        learn_indicator_weight=True,
-        enable_geometry_emb=True,
-        enable_color_emb=True,
-        enable_geometry_input=False,
+            self,
+            mesh_sampler,
+            b_xyz_input,
+            D_density: int,
+            D_color: int,
+            W: int,
+            geometry_dim: int,
+            color_dim: int,
+            multires_view: int,
+            multires_d: int,
+            multires_fg: int,
+            multires_ft: int,
+            enable_nablas_input: bool,
+            input_view_dim=3,
+            input_d_dim=1,
+            ln_s=0.2996,
+            speed_factor=1.0,
+            learn_indicator_vector=False,
+            learn_indicator_weight=True,
+            enable_geometry_emb=True,
+            enable_color_emb=True,
+            enable_geometry_input=False,
     ):
         super(NeuMesh, self).__init__()
 
@@ -197,7 +196,6 @@ class NeuMesh(nn.Module):
             f"input_d_dim: {input_d_dim}, input_view_dim: {input_view_dim}, input_ch_d: {input_ch_d}, input_ch_view: {input_ch_view}, input_ch_pts: {input_ch_pts}, input_ch_color: {input_ch_color}"
         )
 
-
     def compute_distance(self, xyz):
         _ds, _indices, _weights = self.mesh_sampler.compute_distance(
             # xyz.detach().view(-1, 3),
@@ -215,12 +213,12 @@ class NeuMesh(nn.Module):
         return _ds, _indices, _weights
 
     def forward(
-        self,
-        xyz: torch.Tensor,
-        view_dirs: torch.Tensor,
-        density_only=False,
-        need_nablas=True,
-        nablas_only=False,
+            self,
+            xyz: torch.Tensor,
+            view_dirs: torch.Tensor,
+            density_only=False,
+            need_nablas=True,
+            nablas_only=False,
     ):
         if self.b_xyz_input == True:
             out = self._forward(xyz, view_dirs, density_only=density_only)
@@ -255,24 +253,24 @@ class NeuMesh(nn.Module):
         )
 
     def interpolation(
-        self, features: torch.Tensor, indices: torch.Tensor, weights: torch.Tensor
+            self, features: torch.Tensor, indices: torch.Tensor, weights: torch.Tensor
     ):
         fg = torch.sum(features[indices] * weights.unsqueeze(-1), dim=-2)
         return fg
 
     def _forward(
-        self,
-        xyz: torch.Tensor,
-        d: torch.Tensor,
-        view_dirs: torch.Tensor,
-        indices: torch.Tensor = None,
-        weights: torch.Tensor = None,
-        density_only: bool = False,
-        need_nablas: bool = False,
-        nablas_only_for_eikonal: bool = False,
-        # skip_far_points: bool = True,
-        skip_far_points: bool = False,
-        far_point_thresh: float = 0.1,
+            self,
+            xyz: torch.Tensor,
+            d: torch.Tensor,
+            view_dirs: torch.Tensor,
+            indices: torch.Tensor = None,
+            weights: torch.Tensor = None,
+            density_only: bool = False,
+            need_nablas: bool = False,
+            nablas_only_for_eikonal: bool = False,
+            # skip_far_points: bool = True,
+            skip_far_points: bool = False,
+            far_point_thresh: float = 0.1,
     ):
         """
         d: (N,1), distance from point to nearest mesh
@@ -352,12 +350,12 @@ class NeuMesh(nn.Module):
         return density, color
 
     def forward_with_ds(
-        self,
-        xyz: torch.Tensor,
-        view_dirs: torch.Tensor,
-        density_only=False,
-        need_nablas=True,
-        nablas_only=False,
+            self,
+            xyz: torch.Tensor,
+            view_dirs: torch.Tensor,
+            density_only=False,
+            need_nablas=True,
+            nablas_only=False,
     ):
         if self.b_xyz_input == True:
             out = self._forward(xyz, view_dirs, density_only=density_only)
@@ -381,14 +379,14 @@ class NeuMesh(nn.Module):
         return out
 
     def forward_editcolor(
-        self,
-        color_features,
-        d: torch.Tensor,
-        view_dirs: torch.Tensor,
-        indices: torch.Tensor = None,
-        weights: torch.Tensor = None,
-        h=None,
-        nabla=None,
+            self,
+            color_features,
+            d: torch.Tensor,
+            view_dirs: torch.Tensor,
+            indices: torch.Tensor = None,
+            weights: torch.Tensor = None,
+            h=None,
+            nabla=None,
     ):
 
         d_emb = self.embed_fn_d(d)
@@ -417,13 +415,13 @@ class NeuMesh(nn.Module):
         return torch.sigmoid(self.indicator_weight_raw)
 
     def compute_bounded_near_far(
-        self,
-        rays_o,
-        rays_d,
-        near,
-        far,
-        sample_grid: int = 256,
-        distance_thresh: float = 0.1,
+            self,
+            rays_o,
+            rays_d,
+            near,
+            far,
+            sample_grid: int = 256,
+            distance_thresh: float = 0.1,
     ):
         near_orig = near.clone()
         far_orig = far.clone()
@@ -456,37 +454,37 @@ class NeuMesh(nn.Module):
 
 
 def volume_render(
-    rays_o,
-    rays_d,
-    model: NeuMesh,
-    obj_bounding_radius=1.0,
-    batched=False,
-    batched_info={},
-    # render algorithm config
-    calc_normal=False,
-    use_view_dirs=True,
-    rayschunk=65536,
-    netchunk=1048576,
-    white_bkgd=False,
-    near_bypass: Optional[float] = None,
-    far_bypass: Optional[float] = None,
-    # render function config
-    detailed_output=True,
-    show_progress=False,
-    # sampling related
-    perturb=False,  # config whether do stratified sampling
-    fixed_s_recp=1 / 64.0,
-    N_samples=64,
-    N_importance=64,
-    N_outside=0,  # whether to use outside nerf
-    # upsample related
-    upsample_algo="official_solution",
-    N_nograd_samples=2048,
-    N_upsample_iters=4,
-    b_out_samples=False,
-    compute_bounded_near_far=True,
-    random_color_direction=False,
-    **dummy_kwargs,  # just place holder
+        rays_o,
+        rays_d,
+        model: NeuMesh,
+        obj_bounding_radius=1.0,
+        batched=False,
+        batched_info={},
+        # render algorithm config
+        calc_normal=False,
+        use_view_dirs=True,
+        rayschunk=65536,
+        netchunk=1048576,
+        white_bkgd=False,
+        near_bypass: Optional[float] = None,
+        far_bypass: Optional[float] = None,
+        # render function config
+        detailed_output=True,
+        show_progress=False,
+        # sampling related
+        perturb=False,  # config whether do stratified sampling
+        fixed_s_recp=1 / 64.0,
+        N_samples=64,
+        N_importance=64,
+        N_outside=0,  # whether to use outside nerf
+        # upsample related
+        upsample_algo="official_solution",
+        N_nograd_samples=2048,
+        N_upsample_iters=4,
+        b_out_samples=False,
+        compute_bounded_near_far=True,
+        random_color_direction=False,
+        **dummy_kwargs,  # just place holder
 ):
     """
     input:
@@ -521,7 +519,7 @@ def volume_render(
         # [(B), N_rays] x 2
         near, far = rend_util.near_far_from_sphere(
             rays_o, rays_d, r=obj_bounding_radius
-        )   
+        )
         if compute_bounded_near_far:
             near, far = model.compute_bounded_near_far(rays_o, rays_d, near, far)
         if near_bypass is not None:
@@ -570,8 +568,8 @@ def volume_render(
                     prev_z_vals, next_z_vals = _d[..., :-1], _d[..., 1:]
                     mid_sdf = (prev_sdf + next_sdf) * 0.5
                     dot_val = (next_sdf - prev_sdf) / (
-                        next_z_vals - prev_z_vals + 1e-5
-                    )  
+                            next_z_vals - prev_z_vals + 1e-5
+                    )
                     prev_dot_val = torch.cat(
                         [
                             torch.zeros_like(dot_val[..., :1], device=device),
@@ -589,8 +587,8 @@ def volume_render(
 
                     dist = next_z_vals - prev_z_vals
                     prev_esti_sdf = (
-                        mid_sdf - dot_val * dist * 0.5
-                    ) 
+                            mid_sdf - dot_val * dist * 0.5
+                    )
                     next_esti_sdf = mid_sdf + dot_val * dist * 0.5
 
                     # phi_s_base = 64
@@ -646,7 +644,7 @@ def volume_render(
         # [(B), N_ryas, N_pts], [(B), N_ryas, N_pts-1]
         cdf, opacity_alpha = sdf_to_alpha(
             sdf, model.forward_s()
-        )   
+        )
         # radiances = model.forward_radiance(pts_mid, view_dirs_mid)
         if random_color_direction == False:
             rad_sdf, radiances = batchify_query(
@@ -700,7 +698,7 @@ def volume_render(
             normals_map = F.normalize(nablas, dim=-1)
             N_pts = min(visibility_weights.shape[-1], normals_map.shape[-2])
             normals_map = (
-                normals_map[..., :N_pts, :] * visibility_weights[..., :N_pts, None]
+                    normals_map[..., :N_pts, :] * visibility_weights[..., :N_pts, None]
             ).sum(dim=-2)
             ret_i["normals_volume"] = normals_map
 
@@ -727,11 +725,11 @@ def volume_render(
 
     ret = {}
     for i in tqdm(
-        range(0, rays_o.shape[DIM_BATCHIFY], rayschunk), disable=not show_progress
+            range(0, rays_o.shape[DIM_BATCHIFY], rayschunk), disable=not show_progress
     ):
         ret_i = render_rayschunk(
-            rays_o[:, i : i + rayschunk] if batched else rays_o[i : i + rayschunk],
-            rays_d[:, i : i + rayschunk] if batched else rays_d[i : i + rayschunk],
+            rays_o[:, i: i + rayschunk] if batched else rays_o[i: i + rayschunk],
+            rays_d[:, i: i + rayschunk] if batched else rays_d[i: i + rayschunk],
         )
         for k, v in ret_i.items():
             if k not in ret:
@@ -792,13 +790,13 @@ class MeshSampler:
             raise NotImplementedError
 
     def compute_distance_frnn(
-        self,
-        xyz,
-        K=8,
-        signed_distance=True,
-        use_middle_vector=False,
-        indicator_vector=None,
-        indicator_weight=0.1,
+            self,
+            xyz,
+            K=8,
+            signed_distance=True,
+            use_middle_vector=False,
+            indicator_vector=None,
+            indicator_weight=0.1,
     ):
         dis, indices, _, _ = frnn.frnn_grid_points(
             xyz.unsqueeze(0),
@@ -868,8 +866,8 @@ class SingleRenderer(nn.Module):
     def forward(self, rays_o, rays_d, **kwargs):
         return volume_render(rays_o, rays_d, self.model, **kwargs)
 
-def get_neumesh_model(args):
 
+def get_neumesh_model(args):
     mesh = o3d.io.read_triangle_mesh(args.neumesh.prior_mesh)
     mesh_sampler = MeshSampler(
         mesh,
@@ -932,7 +930,6 @@ def get_neumesh_model(args):
     model_config["learn_indicator_weight"] = args.neumesh.get(
         "learn_indicator_weight", False
     )
-
 
     has_eikonal = float(args.neumesh.loss_weights.setdefault("eikonal", 0.0))
 

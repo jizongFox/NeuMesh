@@ -42,10 +42,10 @@ def view_matrix(forward: np.ndarray, up: np.ndarray, cam_location: np.ndarray):
 
 
 def look_at(
-    cam_location: np.ndarray,
-    point: np.ndarray,
-    up=np.array([0.0, -1.0, 0.0])  # openCV convention
-    # up=np.array([0., 1., 0.])         # openGL convention
+        cam_location: np.ndarray,
+        point: np.ndarray,
+        up=np.array([0.0, -1.0, 0.0])  # openCV convention
+        # up=np.array([0., 1., 0.])         # openGL convention
 ):
     # Cam points in positive z direction
     forward = normalize(point - cam_location)  # openCV convention
@@ -105,14 +105,14 @@ def lift(x, y, z, intrinsics):
     sk = intrinsics[..., 0, 1]
 
     x_lift = (
-        (
-            x
-            - cx.unsqueeze(-1)
-            + cy.unsqueeze(-1) * sk.unsqueeze(-1) / fy.unsqueeze(-1)
-            - sk.unsqueeze(-1) * y / fy.unsqueeze(-1)
-        )
-        / fx.unsqueeze(-1)
-        * z
+            (
+                    x
+                    - cx.unsqueeze(-1)
+                    + cy.unsqueeze(-1) * sk.unsqueeze(-1) / fy.unsqueeze(-1)
+                    - sk.unsqueeze(-1) * y / fy.unsqueeze(-1)
+            )
+            / fx.unsqueeze(-1)
+            * z
     )
     y_lift = (y - cy.unsqueeze(-1)) / fy.unsqueeze(-1) * z
 
@@ -177,7 +177,7 @@ def get_rays(c2w, intrinsics, H, W, N_rays=-1):
 
 
 def near_far_from_sphere(
-    ray_origins: torch.Tensor, ray_directions: torch.Tensor, r=1.0, keepdim=True
+        ray_origins: torch.Tensor, ray_directions: torch.Tensor, r=1.0, keepdim=True
 ):
     """
     NOTE: modified from https://github.com/Totoro97/NeuS
@@ -200,7 +200,7 @@ def near_far_from_sphere(
 
 
 def get_sphere_intersection(
-    ray_origins: torch.Tensor, ray_directions: torch.Tensor, r=1.0
+        ray_origins: torch.Tensor, ray_directions: torch.Tensor, r=1.0
 ):
     """
     NOTE: modified from IDR. https://github.com/lioryariv/idr
@@ -227,10 +227,10 @@ def get_sphere_intersection(
 
 
 def get_dvals_from_radius(
-    ray_origins: torch.Tensor,
-    ray_directions: torch.Tensor,
-    rs: torch.Tensor,
-    far_end=True,
+        ray_origins: torch.Tensor,
+        ray_directions: torch.Tensor,
+        rs: torch.Tensor,
+        far_end=True,
 ):
     """
     ray_origins: camera center's coordinate
@@ -291,13 +291,13 @@ def sample_pdf(bins, weights, N_importance, det=False, eps=1e-5):
     else:
         u = torch.rand(
             list(cdf.shape[:-1]) + [N_importance], device=device
-        )  
+        )
     u = u.contiguous()
 
     # Invert CDF
     inds = torch.searchsorted(
         cdf.detach(), u, right=False
-    )  
+    )
 
     below = torch.clamp_min(inds - 1, 0)
     above = torch.clamp_max(inds, cdf.shape[-1] - 1)

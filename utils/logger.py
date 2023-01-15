@@ -1,14 +1,15 @@
+import os
+import pickle
+
+import imageio
+import numpy as np
+import torch
+import torch.distributed as dist
+import torchvision
+
 from utils import io_util
 from utils.print_fn import log
 
-import os
-import torch
-import pickle
-import imageio
-import torchvision
-import numpy as np
-
-import torch.distributed as dist
 
 # ---------------------------------------------------------------------------
 # ---------------------- tensorboard / image recorder -----------------------
@@ -21,14 +22,14 @@ class Logger(object):
     """
 
     def __init__(
-        self,
-        log_dir,
-        img_dir,
-        monitoring=None,
-        monitoring_dir=None,
-        rank=0,
-        is_master=True,
-        multi_process_logging=True,
+            self,
+            log_dir,
+            img_dir,
+            monitoring=None,
+            monitoring_dir=None,
+            rank=0,
+            is_master=True,
+            multi_process_logging=True,
     ):
         self.stats = dict()
         self.log_dir = log_dir

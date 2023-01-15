@@ -1,24 +1,24 @@
-from models.base import ImplicitSurface
+from collections import OrderedDict
+from typing import Union
 
 import numpy as np
-from tqdm import tqdm
-from typing import Union
-from collections import OrderedDict
-
 import torch
 import torch.nn.functional as F
+from tqdm import tqdm
+
+from models.base import ImplicitSurface
 
 
 def run_secant_method(
-    f_low,
-    f_high,
-    d_low,
-    d_high,
-    rays_o_masked,
-    rays_d_masked,
-    implicit_surface_query_fn,
-    n_secant_steps,
-    logit_tau,
+        f_low,
+        f_high,
+        d_low,
+        d_high,
+        rays_o_masked,
+        rays_d_masked,
+        implicit_surface_query_fn,
+        n_secant_steps,
+        logit_tau,
 ):
     d_pred = -f_low * (d_high - d_low) / (f_high - f_low) + d_low
     for i in range(n_secant_steps):
@@ -43,20 +43,20 @@ def run_bisection_method():
 
 
 def root_finding_surface_points(
-    surface_query_fn,
-    rays_o: torch.Tensor,
-    rays_d: torch.Tensor,
-    near: Union[float, torch.Tensor] = 0.0,
-    far: Union[float, torch.Tensor] = 6.0,
-    # function config
-    batched=True,
-    batched_info={},
-    # algorithm config
-    N_steps=256,
-    logit_tau=0.0,
-    method="secant",
-    N_secant_steps=8,
-    fill_inf=True,
+        surface_query_fn,
+        rays_o: torch.Tensor,
+        rays_d: torch.Tensor,
+        near: Union[float, torch.Tensor] = 0.0,
+        far: Union[float, torch.Tensor] = 6.0,
+        # function config
+        batched=True,
+        batched_info={},
+        # algorithm config
+        N_steps=256,
+        logit_tau=0.0,
+        method="secant",
+        N_secant_steps=8,
+        fill_inf=True,
 ):
     """
     rays_o: [(B), N_rays, 3]
@@ -121,12 +121,12 @@ def root_finding_surface_points(
 
         # mask: whether the first sign change is from pos to neg (outside surface into the surface)
         mask_pos_to_neg = (
-            val[
-                torch.arange(B).unsqueeze(-1),
-                torch.arange(N_rays).unsqueeze(0),
-                indices,
-            ]
-            > 0
+                val[
+                    torch.arange(B).unsqueeze(-1),
+                    torch.arange(N_rays).unsqueeze(0),
+                    indices,
+                ]
+                > 0
         )
 
         mask = mask_sign_change & mask_pos_to_neg & mask_0_not_occupied
@@ -189,7 +189,7 @@ def root_finding_surface_points(
         )  # no intersections; or the first intersection is from outside to inside; or the 0-th point is occupied.
         d_pred_out[
             mask_0_not_occupied == 0
-        ] = 0  # if the 0-th point is occupied, the depth should be 0.
+            ] = 0  # if the 0-th point is occupied, the depth should be 0.
 
         if not batched:
             d_pred_out.squeeze_(0)
@@ -201,16 +201,16 @@ def root_finding_surface_points(
 
 
 def sphere_tracing_surface_points(
-    implicit_surface: ImplicitSurface,
-    rays_o,
-    rays_d,
-    # function config
-    near=0.0,
-    far=6.0,
-    batched=True,
-    batched_info={},
-    # algorithm config
-    N_iters=20,
+        implicit_surface: ImplicitSurface,
+        rays_o,
+        rays_d,
+        # function config
+        near=0.0,
+        far=6.0,
+        batched=True,
+        batched_info={},
+        # algorithm config
+        N_iters=20,
 ):
     device = rays_o.device
     d_preds = torch.ones([*rays_o.shape[:-1]], device=device) * near
@@ -226,18 +226,18 @@ def sphere_tracing_surface_points(
 
 
 def surface_render(
-    rays_o: torch.Tensor,
-    rays_d: torch.Tensor,
-    model,
-    calc_normal=True,
-    rayschunk=8192,
-    netchunk=1048576,
-    batched=True,
-    use_view_dirs=True,
-    show_progress=False,
-    ray_casting_algo="",
-    ray_casting_cfgs={},
-    **not_used_kwargs
+        rays_o: torch.Tensor,
+        rays_d: torch.Tensor,
+        model,
+        calc_normal=True,
+        rayschunk=8192,
+        netchunk=1048576,
+        batched=True,
+        use_view_dirs=True,
+        show_progress=False,
+        ray_casting_algo="",
+        ray_casting_cfgs={},
+        **not_used_kwargs
 ):
     """
     input:
@@ -295,11 +295,11 @@ def surface_render(
         nablas = []
         masks = []
         for i in tqdm(
-            range(0, rays_o.shape[DIM_BATCHIFY], rayschunk), disable=not show_progress
+                range(0, rays_o.shape[DIM_BATCHIFY], rayschunk), disable=not show_progress
         ):
             color_i, d_i, nablas_i, mask_i = render_rayschunk(
-                rays_o[:, i : i + rayschunk] if batched else rays_o[i : i + rayschunk],
-                rays_d[:, i : i + rayschunk] if batched else rays_d[i : i + rayschunk],
+                rays_o[:, i: i + rayschunk] if batched else rays_o[i: i + rayschunk],
+                rays_d[:, i: i + rayschunk] if batched else rays_d[i: i + rayschunk],
             )
             colors.append(color_i)
             depths.append(d_i)
